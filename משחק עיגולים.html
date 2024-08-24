@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<!-- saved from url=(0453)http://127.0.0.1:5500/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%201/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%202/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%205/%D7%A9%D7%A2%D7%99%D7%95%D7%A8%206/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%208/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%209/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%2010/%D7%A9%D7%99%D7%A2%D7%95%D7%A811/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%2012/%D7%A9%D7%99%D7%A2%D7%95%D7%A815/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%2016/%D7%A9%D7%99%D7%A2%D7%95%D7%A8%2017/gpt/zb.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק עיגולים</title>
+    
+<link rel="stylesheet" href="./משחק עיגולים_files/zb.css"></head>
+<body>
+    <div id="menu" style="display: none;">
+        <h1>תפריט ראשי</h1>
+        <button onclick="showInstructions()">הוראות המשחק</button>
+        <div id="levels"><button class="level-button">שלב 1</button><button class="level-button">שלב 2</button><button class="level-button locked" disabled="">שלב 3</button><button class="level-button locked" disabled="">שלב 4</button><button class="level-button locked" disabled="">שלב 5</button><button class="level-button locked" disabled="">שלב 6</button><button class="level-button locked" disabled="">שלב 7</button><button class="level-button locked" disabled="">שלב 8</button><button class="level-button locked" disabled="">שלב 9</button><button class="level-button locked" disabled="">שלב 10</button></div>
+    </div>
+
+    <div id="instructions" style="display: none;">
+        <h1>הוראות המשחק</h1>
+        <p>לחץ על העיגולים כדי לקבל נקודות:</p>
+        <ul>
+            <li>עיגול אדום - 1 נקודה</li>
+            <li>עיגול כחול - 10 נקודות</li>
+            <li>עיגול ירוק - 50 נקודות</li>
+        </ul>
+        <p>נסה להשיג את מספר הנקודות הדרוש בכל שלב כדי לעבור לשלב הבא.</p>
+        <p>אם הזמן נגמר לפני שהגעת למטרה, תצטרך לנסות שוב את השלב.</p>
+        <button onclick="startGame()">התחל לשחק</button>
+    </div>
+
+    <div id="game" style="display: block;">
+        <div class="circle" id="circle1" data-points="1" style="background-color: red; left: 479px; top: 412px; display: none;"></div>
+        <div class="circle" id="circle2" data-points="10" style="background-color: blue; left: 374px; top: 169px; display: none;"></div>
+        <div class="circle" id="circle3" data-points="50" style="background-color: green; left: 18px; top: 105px; display: none;"></div>
+
+        <div id="score">נקודות: 110</div>
+        <div id="timer">זמן שנותר: 0 שניות</div>
+        <div id="results" style="display: block;">
+            <div id="finalScore">סיימת את השלב עם 110 נקודות.</div>
+            <div id="clickCounts">
+                <span style="color: red;">עיגול אדום</span>: 0 לחיצות<br>
+                <span style="color: blue;">עיגול כחול</span>: 1 לחיצות<br>
+                <span style="color: green;">עיגול ירוק</span>: 2 לחיצות
+            </div>
+            <button id="nextLevelButton">המשך לשלב 2</button>
+        </div>
+    </div>
+
+    <script>document.addEventListener('DOMContentLoaded', function() {
+        let score = 0;
+        let clicks = { circle1: 0, circle2: 0, circle3: 0 };
+        let timeLeft = 60;
+        let currentLevel = 1;
+        const maxLevel = 10;
+        const scoreGoals = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]; // ניקוד נדרש לכל שלב
+        let unlockedLevels = [1]; // רמות פתוחות להתחלה
+    
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const resultsDisplay = document.getElementById('results');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const clickCountsDisplay = document.getElementById('clickCounts');
+        const nextLevelButton = document.getElementById('nextLevelButton');
+        const menu = document.getElementById('menu');
+        const game = document.getElementById('game');
+        const instructions = document.getElementById('instructions');
+        const levelsContainer = document.getElementById('levels');
+    
+        // הצגת הוראות המשחק
+        function showInstructions() {
+            instructions.style.display = 'block';
+        }
+    
+        // יצירת כפתורי שלבים
+        function createLevelButtons() {
+            for (let i = 1; i <= maxLevel; i++) {
+                const button = document.createElement('button');
+                button.textContent = `שלב ${i}`;
+                button.className = 'level-button';
+                button.disabled = !unlockedLevels.includes(i); // נעילת כפתור אם השלב לא פתוח
+                button.classList.toggle('locked', !unlockedLevels.includes(i));
+                button.onclick = function() {
+                    if (unlockedLevels.includes(i)) {
+                        currentLevel = i;
+                        menu.style.display = 'none';
+                        instructions.style.display = 'none';
+                        game.style.display = 'block';
+                        startGame();
+                    }
+                };
+                levelsContainer.appendChild(button);
+            }
+        }
+    
+        createLevelButtons();
+    
+        const circles = document.querySelectorAll('.circle');
+        circles.forEach(circle => {
+            circle.addEventListener('click', function() {
+                const points = parseInt(circle.getAttribute('data-points'));
+                score += points;
+                scoreDisplay.textContent = `נקודות: ${score}`;
+    
+                // עדכון מספר הלחיצות עבור כל עיגול
+                clicks[circle.id]++;
+            });
+    
+            moveCircle(circle);
+        });
+    
+        function moveCircle(circle) {
+            setInterval(() => {
+                const maxX = window.innerWidth - circle.clientWidth;
+                const maxY = window.innerHeight - circle.clientHeight;
+                const randomX = Math.floor(Math.random() * maxX);
+                const randomY = Math.floor(Math.random() * maxY);
+    
+                circle.style.left = `${randomX}px`;
+                circle.style.top = `${randomY}px`;
+            }, Math.random() * 1000 + 500);
+        }
+    
+        function startGame() {
+            score = 0;
+            clicks = { circle1: 0, circle2: 0, circle3: 0 };
+            timeLeft = 60;
+            scoreDisplay.textContent = `נקודות: ${score}`;
+            timerDisplay.textContent = `זמן שנותר: ${timeLeft} שניות`;
+            resultsDisplay.style.display = 'none';
+            circles.forEach(circle => circle.style.display = 'block');
+            const timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `זמן שנותר: ${timeLeft} שניות`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame();
+                }
+            }, 1000);
+        }
+    
+        function endGame() {
+            circles.forEach(circle => circle.style.display = 'none');
+            finalScoreDisplay.textContent = `סיימת את השלב עם ${score} נקודות.`;
+            clickCountsDisplay.innerHTML = `
+                <span style="color: red;">עיגול אדום</span>: ${clicks.circle1} לחיצות<br>
+                <span style="color: blue;">עיגול כחול</span>: ${clicks.circle2} לחיצות<br>
+                <span style="color: green;">עיגול ירוק</span>: ${clicks.circle3} לחיצות
+            `;
+            resultsDisplay.style.display = 'block';
+    
+            // בדיקה אם עברת לשלב הבא
+            if (score >= scoreGoals[currentLevel - 1]) {
+                if (!unlockedLevels.includes(currentLevel + 1) && currentLevel < maxLevel) {
+                    unlockedLevels.push(currentLevel + 1);
+                    updateLevelButtons();
+                }
+                nextLevelButton.textContent = `המשך לשלב ${currentLevel + 1}`;
+                nextLevelButton.onclick = function() {
+                    currentLevel++;
+                    if (currentLevel <= maxLevel) {
+                        startGame();
+                    } else {
+                        alert("כל הכבוד! סיימת את כל השלבים!");
+                        menu.style.display = 'block';
+                        game.style.display = 'none';
+                    }
+                };
+            } else {
+                nextLevelButton.textContent = "נסה שוב את השלב";
+                nextLevelButton.onclick = function() {
+                    startGame();
+                };
+            }
+        }
+    
+        function updateLevelButtons() {
+            const buttons = levelsContainer.querySelectorAll('.level-button');
+            buttons.forEach((button, index) => {
+                button.disabled = !unlockedLevels.includes(index + 1);
+                button.classList.toggle('locked', !unlockedLevels.includes(index + 1));
+            });
+        }
+    
+        showInstructions();
+    });
+    </script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+
+</body></html>

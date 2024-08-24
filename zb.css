@@ -1,0 +1,37 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+#menu, #instructions, #game, #results {
+    margin: 20px;
+}
+
+#game .circle {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#score, #timer {
+    font-size: 24px;
+    margin: 10px;
+}
+
+#results {
+    margin-top: 20px;
+}
+
+.level-button {
+    font-size: 18px;
+    margin: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.level-button.locked {
+    color: grey;
+    cursor: not-allowed;
+}
